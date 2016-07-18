@@ -1,5 +1,9 @@
 package ibm.com.mysampleapp;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -42,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         //pushCoreInit
         // {{pushCoreInit}}
         try {
-            BMSClient.getInstance().initialize(getApplicationContext(), "https://chevy-bluemix-space.mybluemix.net", "c1c57161-2b25-47cf-95c5-c1ee4a32a291");
+            BMSClient.getInstance().initialize(this, "https://sample2432.mybluemix.net", "2604ecdd-f3d3-4c1b-ad70-33651be40897", BMSClient.REGION_US_SOUTH); // Be sure to update your region appropriately if you are not using US_SOUTH
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -51,35 +55,52 @@ public class MainActivity extends AppCompatActivity {
         //pushPushInit
         // {{pushPushInit}}
         push = MFPPush.getInstance();
-        push.initialize(getApplicationContext());
+        push.initialize(this);
 
         //pushPushPassToken
         // {{pushPushPassToken}}
         //Register Android devices
         push.register(new MFPPushResponseListener<String>() {
             @Override
-            public void onSuccess(String deviceId) {
+            public void onSuccess(String response) {
                 //Toast.makeText(getApplicationContext(), "Hello",  Toast.LENGTH_LONG).show();
-                Log.d("push", "Push succedded!");
+                Log.d("push", "Push registration succeeded! holla" + response);
             }
             @Override
             public void onFailure(MFPPushException ex) {
                 //handle failure here
+                Log.d("push", "Push registration failed!" + ex.getErrorMessage());
             }
         });
 
         //Handles the notification when it arrives
         //pushPushReceiveNotifications
         // {{pushPushReceiveNotifications}}
+//        notificationListener = new MFPPushNotificationListener(message) {
+//            @Override
+//            public void onReceive (final MFPSimplePushNotification message){
+//                // Handle Push Notification
+//                Log.d("MFP", message.toString());
+//            }
+//        };
         notificationListener = new MFPPushNotificationListener() {
             @Override
-            public void onReceive (final MFPSimplePushNotification message){
-                // Handle Push Notification
-                Log.d("MFP", message.toString());
+            public void onReceive(final MFPSimplePushNotification message) {
+                Log.i("push", "Received a Push Notification: " + message.toString());
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("Received a Push Notification")
+                                .setMessage(message.getAlert())
+                                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int whichButton) {
+                                    }
+                                })
+                                .show();
+                    }
+                });
             }
         };
-
-
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -102,6 +123,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // If the device has been registered previously, hold push notifications when the app is paused
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (push != null) {
+            push.hold();
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

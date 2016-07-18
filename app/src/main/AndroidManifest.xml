@@ -31,7 +31,6 @@
                 <category  android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
-    </application>
 
     <service android:name="com.ibm.mobilefirstplatform.clientsdk.android.push.api.MFPPushIntentService" />
 
@@ -49,5 +48,6 @@
             <category android:name="com.ibm.mobilefirstplatform.clientsdk.android.app" />
         </intent-filter>
     </receiver>
+    </application>
 
 </manifest>
